@@ -25,6 +25,7 @@ export const CanvasProvider = ({ children }) => {
 
     console.log("numPages", numPages);
     console.log("img1", data);
+    console.log("dataPdf", dataPdf);
 
     // canvas edits
     const [edits, setEdits] = React.useState({});

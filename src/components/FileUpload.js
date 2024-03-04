@@ -137,7 +137,9 @@ export default function FileUpload() {
         contextValues.canvas.clear()
         contextValues.edits[page + offset] && contextValues.canvas.loadFromJSON(contextValues.edits[page + offset]);
         contextValues.canvas.renderAll();
+        
     }
+
 
     const initCanvas = () => {
         return (new fabric.Canvas(canvasRef.current, {
@@ -151,31 +153,29 @@ export default function FileUpload() {
 
     function getCoords(oCoords) {
         return {
-          tl: new fabric.Point(oCoords.tl.x, oCoords.tl.y),
-          tr: new fabric.Point(oCoords.tr.x, oCoords.tr.y),
-          bl: new fabric.Point(oCoords.bl.x, oCoords.bl.y),
-          br: new fabric.Point(oCoords.br.x, oCoords.br.y)
+            tl: new fabric.Point(oCoords.tl.x, oCoords.tl.y),
+            tr: new fabric.Point(oCoords.tr.x, oCoords.tr.y),
+            bl: new fabric.Point(oCoords.bl.x, oCoords.bl.y),
+            br: new fabric.Point(oCoords.br.x, oCoords.br.y)
         }
-      }
+    }
 
+    const pdf = contextValues.dataPdf[contextValues.currPage - 1]
+    const canvasWidth = pdf?.width;
+    const canvasHeight = pdf?.height;
 
     React.useEffect(() => {
         const canvas = contextValues?.canvas   
-        const pdf = contextValues.dataPdf[contextValues.currPage - 1]
-        const canvasWidth = pdf?.width;
-        const canvasHeight = pdf?.height;
 
         const handleObjDown = (event) => { 
             const obj = event.target;
             const objBoundingRect = obj.getBoundingRect();
             canvas.setActiveObject(obj)
             const thisCoords = getCoords(canvas.getActiveObject().oCoords);
-            let files 
             contextValues.setData((old) => {
                 const data = []
                 old.forEach(element => {
                     if (element.id === event.target.id) {
-                        
                         data.push({
                             ...element,
                             width: objBoundingRect.width,
@@ -197,7 +197,7 @@ export default function FileUpload() {
             const objBoundingRect = obj.getBoundingRect();
             obj.set({
                 left: Math.min(Math.max(obj.left, 0), canvas.width - objBoundingRect.width),
-                top: Math.min(Math.max(obj.top, 0), ( horizontal ? canvasHeight - 160 : canvasHeight) - objBoundingRect.height)
+                top: Math.min(Math.max(obj.top, 0), (canvasHeight) - objBoundingRect.height)
             });
         };
     
@@ -258,7 +258,7 @@ export default function FileUpload() {
                                         <canvas ref={canvasRef}/>
                                     </Canvas>
                                     <StyledPage contextValues={contextValues}>
-                                        <Page pageNumber={contextValues.currPage} id="docPage" width={595} height={842} />
+                                        <Page pageNumber={contextValues.currPage} id="docPage" width={canvasWidth} height={canvasHeight} />
                                     </StyledPage>
                                 </Document>
                             </PageExport>
