@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -99,6 +99,9 @@ export default function FileUpload() {
     
     const canvasRef = React.useRef(null);
     const contextValues = useButtons();
+    const pdf = contextValues.dataPdf[contextValues.currPage - 1]
+    const canvasWidth = pdf?.width;
+    const canvasHeight = pdf?.height;
 
     const [docIsLoading, setDocIsLoading] = React.useState(false);
 
@@ -125,7 +128,10 @@ export default function FileUpload() {
         contextValues.setEdits({});
         contextValues.setNumPages(numPages);
         contextValues.setCurrPage(1);
-        contextValues.setCanvas(initCanvas());
+        contextValues.setCanvas(initCanvas({
+            width: dataPdf[0].width,
+            height: dataPdf[0].height
+        }));
         setTimeout(() => setDocIsLoading(false), 2000)
     }
 
@@ -141,16 +147,6 @@ export default function FileUpload() {
     }
 
 
-    const initCanvas = () => {
-        return (new fabric.Canvas(canvasRef.current, {
-            isDrawingMode: false,
-            height: 842,
-            width: 595,
-            backgroundColor: 'rgba(0,0,0,0)'
-        }))
-    }
-
-
     function getCoords(oCoords) {
         return {
             tl: new fabric.Point(oCoords.tl.x, oCoords.tl.y),
@@ -160,9 +156,20 @@ export default function FileUpload() {
         }
     }
 
-    const pdf = contextValues.dataPdf[contextValues.currPage - 1]
-    const canvasWidth = pdf?.width;
-    const canvasHeight = pdf?.height;
+
+   
+    
+    const initCanvas = ({
+        width,
+        height
+    }) => {
+        return (new fabric.Canvas(canvasRef.current, {
+            isDrawingMode: false,
+            height,
+            width,
+            backgroundColor: 'rgba(0,0,0,0)'
+        }))
+    }
 
     React.useEffect(() => {
         const canvas = contextValues?.canvas   
@@ -193,11 +200,10 @@ export default function FileUpload() {
         }
         const handleMouseDown = (event) => {
             const obj = event.target;
-            const horizontal = canvasHeight < canvasWidth
             const objBoundingRect = obj.getBoundingRect();
             obj.set({
-                left: Math.min(Math.max(obj.left, 0), canvas.width - objBoundingRect.width),
-                top: Math.min(Math.max(obj.top, 0), (canvasHeight) - objBoundingRect.height)
+                left: Math.min(Math.max(obj.left, 0), canvasWidth - objBoundingRect.width),
+                top: Math.min(Math.max(obj.top, 0), canvasHeight - objBoundingRect.height)
             });
         };
     
@@ -212,15 +218,19 @@ export default function FileUpload() {
 
     }, [contextValues?.canvas, contextValues.currPage]);
 
-
     
 
     React.useEffect(() => {
         pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
     }, [])
 
-   const handleRenderSuccess = pageData => {
-        console.log(pageData);
+    const handlePageLoadSuccess = pageData => {
+        if (contextValues.canvas) {
+            contextValues.canvas.setDimensions({ 
+                height: canvasHeight,
+                width: canvasWidth,
+            });
+        }
     }
 
     return (
@@ -249,7 +259,6 @@ export default function FileUpload() {
                                     
                                 }
                                 <Document
-                                    onRenderSuccess={handleRenderSuccess}
                                     file={contextValues.selectedFile}
                                     onLoadSuccess={onDocumentLoadSuccess}
                                     style={{ display: 'flex', justifyContent: 'center' }}
@@ -258,7 +267,13 @@ export default function FileUpload() {
                                         <canvas ref={canvasRef}/>
                                     </Canvas>
                                     <StyledPage contextValues={contextValues}>
-                                        <Page pageNumber={contextValues.currPage} id="docPage" width={canvasWidth} height={canvasHeight} />
+                                        <Page
+                                            pageNumber={contextValues.currPage}
+                                            id="docPage"
+                                            width={canvasWidth}
+                                            height={canvasHeight}
+                                            onLoadSuccess={handlePageLoadSuccess}
+                                        />
                                     </StyledPage>
                                 </Document>
                             </PageExport>

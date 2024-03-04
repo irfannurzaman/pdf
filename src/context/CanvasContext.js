@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { fabric } from 'fabric'
 import { v4 as uuidv4 } from 'uuid';
 
@@ -26,6 +26,9 @@ export const CanvasProvider = ({ children }) => {
     console.log("numPages", numPages);
     console.log("img1", data);
     console.log("dataPdf", dataPdf);
+    console.log("canvas", canvas);
+    
+    
 
     // canvas edits
     const [edits, setEdits] = React.useState({});
